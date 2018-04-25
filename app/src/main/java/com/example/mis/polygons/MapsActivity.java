@@ -134,7 +134,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.getUiSettings().setZoomControlsEnabled(true);
         //The following code was based on these sites: https://developer.android.com/training/location/retrieve-current.html and https://developer.android.com/training/permissions/index.html
         ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_ACESS_LOCATION);
-        loadMarkers();
+        loadMarkers(); //load the markers list
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -236,10 +236,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onBackPressed(){//the application will save all the markers to the shared preferences but I don't know yet how to erase them
-        super.onBackPressed();
+    public void onPause(){//the application will save all the markers to the shared preferences but I don't know yet how to erase them
+        super.onPause();
         SavePreferences();
     }
+
+    /*@Override
+    public void onResume(){
+        super.onResume();
+        loadMarkers(); //load the markers list
+    }*/
+
  //Maybe the Toast is not necessary
     private LatLng getCentroid(List<LatLng> positions) {//Centroid calculation: http://stackoverflow.com/questions/9752334/calculate-centroid-of-android-graphics-path-values-and-find-the-centroids-rela
                                                         // http://www.androiddevelopersolutions.com/2015/02/android-calculate-center-of-polygon-in.html

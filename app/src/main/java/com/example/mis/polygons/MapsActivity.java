@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.Button;
@@ -62,13 +63,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
-        /*mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-                return false;
-            }
-        });*/
 
         btnClearMap = (Button) findViewById(R.id.clear);
         btnClearMap.setOnClickListener(new View.OnClickListener() {
@@ -140,6 +134,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.getUiSettings().setZoomControlsEnabled(true);
         //The following code was based on these sites: https://developer.android.com/training/location/retrieve-current.html and https://developer.android.com/training/permissions/index.html
         ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_ACESS_LOCATION);
+        loadMarkers();
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -174,7 +169,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             case MY_PERMISSIONS_REQUEST_ACESS_LOCATION: {
                 if (grantResults.length > 0// Considering that if request is cancelled, the result arrays are empty.
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        loadMarkers(); //load the markers list
+                        //loadMarkers(); //load the markers list
                         currentLocation = initializeCurrentLocation(currentLocation);
                     if (currentLocation == null)
                         Toast.makeText(this, "No GPS signal. Try again later.", Toast.LENGTH_LONG).show();
@@ -219,7 +214,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void SavePreferences(){//http://stackoverflow.com/questions/25438043/store-google-maps-markers-in-sharedpreferences
         editor = sharedPref.edit();
         editor.putInt("listSize", markers.size());
-        for(int i = 0; i <markers.size(); i++){
+        for(int i = 0; i < markers.size(); i++){
             editor.putFloat("lat"+i, (float) markers.get(i).getPosition().latitude);
             editor.putFloat("long"+i, (float) markers.get(i).getPosition().longitude);
             editor.putString("title"+i, markers.get(i).getTitle());

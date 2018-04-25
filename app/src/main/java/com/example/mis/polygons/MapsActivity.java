@@ -54,16 +54,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private List<Marker> markers;
     Button btnClearMap;
     Button btnStartPoly;
+    boolean isPolyDrawn = false;
+    Polygon poly;
+    Marker centroidMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        /*mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                return false;
+            }
+        });*/
+
         btnClearMap = (Button) findViewById(R.id.clear);
         btnClearMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) { //Clear the map but it doesn't clear the SharedPreferences
+                btnStartPoly.setText("Start Polygon");
                 mMap.clear();
                 markers.clear();
             }
@@ -71,26 +82,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         btnStartPoly = (Button) findViewById(R.id.butt);
         btnStartPoly.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
-                btnStartPoly.setText("End Polygon"); //change text to End polygon, I don't get the message: String literal in setText cannot be translated
-                PolygonOptions polygonOptions = new PolygonOptions();
-                for (Marker marker: markers) {
-                    polygonOptions.add(marker.getPosition());
-                }
-                LatLng centroid = getCentroid(polygonOptions.getPoints());//www.intmath.com/applications-integration/5-centroid-area.php
-                Polygon polygon = mMap.addPolygon(polygonOptions.fillColor(Color.argb(20, 50, 0, 255)));
-                double area = SphericalUtil.computeArea(polygonOptions.getPoints());//http://stackoverflow.com/questions/28838287/calculate-the-area-of-a-polygon-drawn-on-google-maps-in-an-an; droid-application
-                area = roundTwoDecimals(area);
-                String unit = " m²";
-                if(area > 1000) {
-                    area = roundTwoDecimals(area/1000);
-                    unit = " km²";
-                }
+                if (!isPolyDrawn && markers.size() >= 3) {
+                    isPolyDrawn = true;
+                    btnStartPoly.setText("End Polygon"); //change text to End polygon, I don't get the message: String literal in setText cannot be translated
+                    PolygonOptions polygonOptions = new PolygonOptions();
+                    for (Marker marker : markers) {
+                        polygonOptions.add(marker.getPosition());
+                    }
+                    LatLng centroid = getCentroid(polygonOptions.getPoints());//www.intmath.com/applications-integration/5-centroid-area.php
+                    poly = mMap.addPolygon(polygonOptions.fillColor(Color.argb(20, 50, 0, 255)));
+                    double preciseArea = SphericalUtil.computeArea(polygonOptions.getPoints());//http://stackoverflow.com/questions/28838287/calculate-the-area-of-a-polygon-drawn-on-google-maps-in-an-an; droid-application
+                    double roundedArea;
+                    String unit;
+                    if (preciseArea > 1000000) {
+                        //Toast.makeText(getApplicationContext(),String.valueOf(Math.round(preciseArea / 10000)) + " km²", Toast.LENGTH_LONG).show();
+                        roundedArea = ((double) Math.round(preciseArea / 10000)) / 100; //area with two decimals of precision
+                        unit = " km²";
+                    } else {
+                        //Toast.makeText(getApplicationContext(),String.valueOf(Math.round(preciseArea * 100)) + " m²", Toast.LENGTH_LONG).show();
+                        roundedArea = ((double) Math.round(preciseArea * 100)) / 100.0; //area with two decimals of precision
+                        unit = " m²";
+                    }
 
-                mMap.addMarker(new MarkerOptions().position(centroid).title(String.valueOf(area)+unit));//puts the area value in the centroid marker
+                    centroidMarker = mMap.addMarker(
+                            new MarkerOptions().position(centroid)
+                                               .title(String.valueOf(roundedArea) + unit)
+                                               .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));//puts the area value in the centroid marker
+                } else if(markers.size() < 3) {
+                    Toast.makeText(getApplicationContext(), "At least 3 markers are needed to draw a polygon!", Toast.LENGTH_LONG).show();
+                } else if(isPolyDrawn){
+                    //removing polygon and everything related
+                    isPolyDrawn = false;
+                    btnStartPoly.setText("Start Polygon");
+                    poly.remove();
+                    centroidMarker.remove();
+                }
             }
+
         });
         sharedPref = this.getPreferences(Context.MODE_PRIVATE);//initialize Shared Preferences
         if(markers == null){
@@ -166,7 +196,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (location != null) {
             LatLng myPosition = new LatLng(location.getLatitude(), location.getLongitude());
-            mMap.addMarker(new MarkerOptions().position(myPosition).title("My position"));
+            Marker localPosMarker = mMap.addMarker(new MarkerOptions().position(myPosition).title("My position"));
+            markers.add(localPosMarker);
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myPosition, 6));
             return location;
         }
@@ -178,7 +209,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapLongClick(LatLng point) {//http://stackoverflow.com/questions/16097143/google-maps-android-api-v2-detect-long-click-on-map-and-add-marker-not-working
         EditText editText = (EditText) findViewById(R.id.editText);
         String text = String.valueOf(editText.getText());
-        Marker marker = mMap.addMarker(new MarkerOptions().position(point).title(text).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+        Marker marker = mMap.addMarker(new MarkerOptions().position(point)
+                                                          .title(text)
+                                                          .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))); //creates markers
         markers.add(marker); //add the marker to the markers list
         editText.setText(null);   //clear the editText
     }
@@ -224,11 +257,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng centroid = new LatLng(centerX / positions.size(), centerY / positions.size());
         Toast.makeText(this, "Centroid Lat: "+centroid.latitude+" Long: "+centroid.longitude, Toast.LENGTH_LONG).show();
         return centroid;
-    }
-
-    double roundTwoDecimals(double d)//http://stackoverflow.com/questions/7472519/how-to-round-decimal-numbers-in-android
-    {
-        DecimalFormat twoDForm = new DecimalFormat("#.##");
-        return Double.valueOf(twoDForm.format(d));
     }
 }

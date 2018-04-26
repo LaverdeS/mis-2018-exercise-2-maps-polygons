@@ -1,0 +1,15 @@
+Centroid, SphericalUtil and Area
+(1) www.intmath.com/applications-integration/5-centroid-area.php
+(2) http://stackoverflow.com/questions/28838287/calculate-the-area-of-a-polygon-drawn-on-google-maps-in-an-an; droid-application
+(7) http://stackoverflow.com/questions/9752334/calculate-centroid-of-android-graphics-path-values-and-find-the-centroids-rela
+(8) http://www.androiddevelopersolutions.com/2015/02/android-calculate-center-of-polygon-in.html
+
+Request location permision OnMapReady
+(3) https://developer.android.com/training/location/retrieve-current.html
+(4) https://developer.android.com/training/permissions/index.html
+
+onMapLongClick
+(5) http://stackoverflow.com/questions/16097143/google-maps-android-api-v2-detect-long-click-on-map-and-add-marker-not-working
+
+SharedPreferences
+(6) http://stackoverflow.com/questions/25438043/store-google-maps-markers-in-sharedpreferences

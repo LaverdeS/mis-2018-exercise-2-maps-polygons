@@ -90,8 +90,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     centroidMarker = mMap.addMarker(
                             new MarkerOptions().position(centroid)
-                                               .title(String.valueOf(roundedArea) + unit)
-                                               .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));//Puts the area value in the centroid marker
+                                    .title(String.valueOf(roundedArea) + unit)
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));//Puts the area value in the centroid marker
                 } else if(markers.size() < 3) {
                     Toast.makeText(getApplicationContext(), "At least 3 markers are needed to draw a polygon!", Toast.LENGTH_LONG).show();
                 } else if(isPolyDrawn){//Removing polygon and everything related
@@ -155,7 +155,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_ACESS_LOCATION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){// Considering that if request is cancelled, the result arrays are empty.
-                        currentLocation = initializeCurrentLocation(currentLocation);
+                    currentLocation = initializeCurrentLocation(currentLocation);
                     if (currentLocation == null)
                         Toast.makeText(this, "No GPS signal. Try again later.", Toast.LENGTH_LONG).show();
                     else {
@@ -243,14 +243,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         markers = longitudeSort(markers);
         boolean easternmostReached = false;
         Marker firstMarker = markers.remove(0);
+        Marker lastMarker = markers.get(markers.size()-1);
         orderedMarkers.add(0, firstMarker);
+        String debug = "";
+        int i;
         // putting in orderedMarkers the northernmost markers from west to east
         while (!easternmostReached){
-            for (int i = 0; i < markers.size() - 1; i++) {
+            for (i = 0; i < markers.size() - 1; i++) {
                 Marker currentMarker = markers.get(i);
-                if (currentMarker.getPosition().latitude >= firstMarker.getPosition().latitude) {
+                double slope = (lastMarker.getPosition().latitude  - firstMarker.getPosition().latitude) /
+                               (lastMarker.getPosition().longitude - firstMarker.getPosition().longitude);
+                double q = firstMarker.getPosition().latitude - slope * firstMarker.getPosition().longitude;
+                if (currentMarker.getPosition().latitude >= (slope * currentMarker.getPosition().longitude) + q) { //TODO: refine!
                     orderedMarkers.add(currentMarker);
                     markers.remove(currentMarker);
+                    debug += Integer.toString(i) + "\n";
+                    i--;
                 }
             }
             // in the next position is placed the last element of markers (the easternmost)
@@ -260,7 +268,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // putting in orderedMarkers the southernmost markers from east to west
         for(int k = markers.size()-1; k >= 0; k--){
             orderedMarkers.add(markers.remove(k));
+            //debug += Integer.toString(i) + "\n";
+
         }
+        Toast.makeText(getApplicationContext(), debug, Toast.LENGTH_LONG).show();
+
         return orderedMarkers;
     }
 
@@ -288,6 +300,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 orderedMarkers.add(m1);
             }
         }
+        String debug = "";
+        for (int i = 0; i < orderedMarkers.size(); i++) {
+            debug += Double.toString(orderedMarkers.get(i).getPosition().longitude) + "\n";
+        }
+        Toast.makeText(getApplicationContext(), debug, Toast.LENGTH_LONG).show();
         return orderedMarkers;
     }
 }

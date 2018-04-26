@@ -236,7 +236,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return centroid;
     }
 
-    //References (9) in "references" file
+    //algorithm inspired by https://stackoverflow.com/questions/14263284/create-non-intersecting-polygon-passing-through-all-given-points
     private List<Marker> orderToConvex(List<Marker> markers){
         List<Marker> orderedMarkers = new ArrayList<>();
         // forcing the ordering of markers from the westernmost to the easternmost

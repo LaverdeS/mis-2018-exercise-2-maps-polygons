@@ -1,12 +1,5 @@
 package com.example.mis.polygons;
 
-//SEBASTIAN's progress info:
-//The program is working but the polygon is not starting when the button is clicked. It makes the calculations but when there are already markers on the map
-//The markers are saved pressing the back button on the device. They are permanent, deletable yet.
-//The area appear when the centroid marker is pressed when the polygon has been drawn
-//Working with Nexux 5X API 25 & API 27
-//It's a good idea to run debug to see the full process. I haven't done it yet.
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -45,7 +38,6 @@ import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMapLongClickListener {
 
-    //Maybe some of these are not necessary private
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
     private final int MY_PERMISSIONS_REQUEST_ACESS_LOCATION = 0;
@@ -67,7 +59,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         btnClearMap = (Button) findViewById(R.id.clear);
         btnClearMap.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) { //Clear the map but it doesn't clear the SharedPreferences
+            public void onClick(View v) { //Clear the map and markers list
                 btnStartPoly.setText("Start Polygon");
                 mMap.clear();
                 markers.clear();
@@ -80,34 +72,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View v) {
                 if (!isPolyDrawn && markers.size() >= 3) {
                     isPolyDrawn = true;
-                    btnStartPoly.setText("End Polygon"); //change text to End polygon, I don't get the message: String literal in setText cannot be translated
+                    btnStartPoly.setText("End Polygon"); //Change text to End polygon
                     PolygonOptions polygonOptions = new PolygonOptions();
                     for (Marker marker : markers) {
                         polygonOptions.add(marker.getPosition());
                     }
-                    LatLng centroid = getCentroid(polygonOptions.getPoints());//www.intmath.com/applications-integration/5-centroid-area.php
+                    LatLng centroid = getCentroid(polygonOptions.getPoints());//Reference (1) in "references" file
                     poly = mMap.addPolygon(polygonOptions.fillColor(Color.argb(20, 50, 0, 255)));
-                    double preciseArea = SphericalUtil.computeArea(polygonOptions.getPoints());//http://stackoverflow.com/questions/28838287/calculate-the-area-of-a-polygon-drawn-on-google-maps-in-an-an; droid-application
+                    double preciseArea = SphericalUtil.computeArea(polygonOptions.getPoints());// Reference(2) in "references" file
                     double roundedArea;
                     String unit;
                     if (preciseArea > 1000000) {
-                        //Toast.makeText(getApplicationContext(),String.valueOf(Math.round(preciseArea / 10000)) + " km²", Toast.LENGTH_LONG).show();
-                        roundedArea = ((double) Math.round(preciseArea / 10000)) / 100; //area with two decimals of precision
+                        roundedArea = ((double) Math.round(preciseArea / 10000)) / 100; //Area with two decimals of precision
                         unit = " km²";
                     } else {
-                        //Toast.makeText(getApplicationContext(),String.valueOf(Math.round(preciseArea * 100)) + " m²", Toast.LENGTH_LONG).show();
-                        roundedArea = ((double) Math.round(preciseArea * 100)) / 100.0; //area with two decimals of precision
+                        roundedArea = ((double) Math.round(preciseArea * 100)) / 100.0; //Area with two decimals of precision
                         unit = " m²";
                     }
 
                     centroidMarker = mMap.addMarker(
                             new MarkerOptions().position(centroid)
                                                .title(String.valueOf(roundedArea) + unit)
-                                               .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));//puts the area value in the centroid marker
+                                               .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));//Puts the area value in the centroid marker
                 } else if(markers.size() < 3) {
                     Toast.makeText(getApplicationContext(), "At least 3 markers are needed to draw a polygon!", Toast.LENGTH_LONG).show();
-                } else if(isPolyDrawn){
-                    //removing polygon and everything related
+                } else if(isPolyDrawn){//Removing polygon and everything related
                     isPolyDrawn = false;
                     btnStartPoly.setText("Start Polygon");
                     poly.remove();
@@ -116,24 +105,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
         });
-        sharedPref = this.getPreferences(Context.MODE_PRIVATE);//initialize Shared Preferences
+        sharedPref = this.getPreferences(Context.MODE_PRIVATE);//Initialize Shared Preferences
         if(markers == null){
-            markers = new ArrayList<Marker>();//initialize the markerList
+            markers = new ArrayList<Marker>();//Initialize the markerList
         }
 
-        buildGoogleApiClient();// Create GoogleAPIClient.
-        mGoogleApiClient.connect();//connect mGoogleApiClient
+        buildGoogleApiClient();//Create GoogleAPIClient.
+        mGoogleApiClient.connect();//Connect mGoogleApiClient
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map); // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment.getMapAsync(this);
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) { //* Manipulates the map once available. This callback is triggered when the map is ready to be used. This is where we can add markers or lines, add listeners or move the camera.
+    public void onMapReady(GoogleMap googleMap) { //Manipulates the map once available. This callback is triggered when the map is ready to be used. This is where we can add markers or lines, add listeners or move the camera.
         mMap = googleMap;
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        //The following code was based on these sites: https://developer.android.com/training/location/retrieve-current.html and https://developer.android.com/training/permissions/index.html
         ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_ACESS_LOCATION);
+        //References (3) (4) in "references" file
         loadMarkers(); //load the markers list
     }
 
@@ -167,9 +156,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_ACESS_LOCATION: {
-                if (grantResults.length > 0// Considering that if request is cancelled, the result arrays are empty.
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        //loadMarkers(); //load the markers list
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){// Considering that if request is cancelled, the result arrays are empty.
                         currentLocation = initializeCurrentLocation(currentLocation);
                     if (currentLocation == null)
                         Toast.makeText(this, "No GPS signal. Try again later.", Toast.LENGTH_LONG).show();
@@ -201,17 +188,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    public void onMapLongClick(LatLng point) {//http://stackoverflow.com/questions/16097143/google-maps-android-api-v2-detect-long-click-on-map-and-add-marker-not-working
+    public void onMapLongClick(LatLng point) {//Reference (5) in "references" file
         EditText editText = (EditText) findViewById(R.id.editText);
         String text = String.valueOf(editText.getText());
-        Marker marker = mMap.addMarker(new MarkerOptions().position(point)
-                                                          .title(text)
-                                                          .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))); //creates markers
+        Marker marker = mMap.addMarker(new MarkerOptions().position(point).title(text).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))); //creates markers
         markers.add(marker); //add the marker to the markers list
         editText.setText(null);   //clear the editText
     }
 
-    private void SavePreferences(){//http://stackoverflow.com/questions/25438043/store-google-maps-markers-in-sharedpreferences
+    private void SavePreferences(){//Reference (6) in "references" file
         editor = sharedPref.edit();
         editor.putInt("listSize", markers.size());
         for(int i = 0; i < markers.size(); i++){
@@ -219,7 +204,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             editor.putFloat("long"+i, (float) markers.get(i).getPosition().longitude);
             editor.putString("title"+i, markers.get(i).getTitle());
         }
-        editor.apply(); //or commit
+        editor.apply(); //or commit()
     }
 
     private void loadMarkers() {
@@ -236,20 +221,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onPause(){//the application will save all the markers to the shared preferences but I don't know yet how to erase them
+    public void onPause(){
         super.onPause();
         SavePreferences();
     }
 
-    /*@Override
-    public void onResume(){
-        super.onResume();
-        loadMarkers(); //load the markers list
-    }*/
-
- //Maybe the Toast is not necessary
-    private LatLng getCentroid(List<LatLng> positions) {//Centroid calculation: http://stackoverflow.com/questions/9752334/calculate-centroid-of-android-graphics-path-values-and-find-the-centroids-rela
-                                                        // http://www.androiddevelopersolutions.com/2015/02/android-calculate-center-of-polygon-in.html
+    private LatLng getCentroid(List<LatLng> positions) {//References (7) (8) in "references" file
         double centerX = 0;
         double centerY = 0;
         for (LatLng position : positions) {

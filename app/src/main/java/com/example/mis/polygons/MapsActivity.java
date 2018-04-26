@@ -236,39 +236,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return centroid;
     }
 
-    /**
-     * The function orders a list of coordinates such that the distance between each two adjacent
-     * vertices is minimal. This property leads to have a convex polygon generated from the vertices
-     *
-     * The function is called only if markers.size() > 3. Hence there are no risks of NullPointerEXception.
-     *
-     * The complexity of the algorithm is O(n^2), not efficient but simple and effective
-     *
-     * @param markers (unordered list of vertices)
-     * @return markers (list of vertices that is going to generate a convex polygon)
-     */
-    /*private List<Marker> orderToConvex(List<Marker> markers){
-        for (int i = 0; i < markers.size(); i++ ){
-            Marker marker = markers.get(i);
-            int minIndex = i+1; //the initialization is redundant but avoids a warning
-            double minDistance = Double.MAX_VALUE;
-            for (int j = 1; j < markers.size() - i; j++){ //in this for-loop I search the nearest vertex saving its index
-                Marker nextMarker = markers.get(j + i);
-                double distance = Math.sqrt(
-                                Math.pow((marker.getPosition().latitude  - nextMarker.getPosition().latitude ),2) +
-                                Math.pow((marker.getPosition().longitude - nextMarker.getPosition().longitude),2) );
-                if (distance < minDistance){
-                    minDistance = distance;
-                    minIndex = j+i;
-                }
-            }
-            if (minIndex-i > 1){ //the nearest vertex is not yet the following in the list order
-                Marker nearestMarker = markers.remove(minIndex);
-                markers.add(i+1, nearestMarker);
-            }
-        }
-        return markers;
-    }*/
     //algorithm inspired by https://stackoverflow.com/questions/14263284/create-non-intersecting-polygon-passing-through-all-given-points
     private List<Marker> orderToConvex(List<Marker> markers){
         List<Marker> orderedMarkers = new ArrayList<>();

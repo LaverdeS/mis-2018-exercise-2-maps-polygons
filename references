@@ -13,3 +13,6 @@ onMapLongClick
 
 SharedPreferences
 (6) http://stackoverflow.com/questions/25438043/store-google-maps-markers-in-sharedpreferences
+
+Non-Self-Intersecting polygons
+https://stackoverflow.com/questions/14263284/create-non-intersecting-polygon-passing-through-all-given-points (a simplified version)

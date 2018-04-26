@@ -13,9 +13,3 @@ onMapLongClick
 
 SharedPreferences
 (6) http://stackoverflow.com/questions/25438043/store-google-maps-markers-in-sharedpreferences
-
-Non-Self-Intersecting polygons
-(9) https://stackoverflow.com/questions/14263284/create-non-intersecting-polygon-passing-through-all-given-points (a simplified version)
-The function orders a list of coordinates such that the distance between each two adjacent vertices is minimal. This property leads to have
-a convex polygon generated from the vertices. The function is called only if markers.size() > 3. Hence there are no risks of NullPointerEXception.
-The complexity of the algorithm is O(n^2), not efficient but simple and effective

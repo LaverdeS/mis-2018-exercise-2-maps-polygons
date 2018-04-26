@@ -245,7 +245,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Marker firstMarker = markers.remove(0);
         Marker lastMarker = markers.get(markers.size()-1);
         orderedMarkers.add(0, firstMarker);
-        String debug = "";
+        //String debug = "";
         int i;
         // putting in orderedMarkers the northernmost markers from west to east
         while (!easternmostReached){
@@ -257,7 +257,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (currentMarker.getPosition().latitude >= (slope * currentMarker.getPosition().longitude) + q) { //TODO: refine!
                     orderedMarkers.add(currentMarker);
                     markers.remove(currentMarker);
-                    debug += Integer.toString(i) + "\n";
+                    //debug += Integer.toString(i) + "\n";
                     i--;
                 }
             }
@@ -268,11 +268,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // putting in orderedMarkers the southernmost markers from east to west
         for(int k = markers.size()-1; k >= 0; k--){
             orderedMarkers.add(markers.remove(k));
-            //debug += Integer.toString(i) + "\n";
-
         }
-        Toast.makeText(getApplicationContext(), debug, Toast.LENGTH_LONG).show();
-
+        //Toast.makeText(getApplicationContext(), debug, Toast.LENGTH_LONG).show();
         return orderedMarkers;
     }
 
@@ -300,11 +297,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 orderedMarkers.add(m1);
             }
         }
+        /* DEBUGGING CODE
         String debug = "";
         for (int i = 0; i < orderedMarkers.size(); i++) {
             debug += Double.toString(orderedMarkers.get(i).getPosition().longitude) + "\n";
         }
-        Toast.makeText(getApplicationContext(), debug, Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), debug, Toast.LENGTH_LONG).show();*/
         return orderedMarkers;
     }
 }

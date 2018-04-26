@@ -1,6 +1,5 @@
 package com.example.mis.polygons;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -10,7 +9,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.Button;
@@ -32,7 +30,6 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.maps.android.SphericalUtil;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,6 +71,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     isPolyDrawn = true;
                     btnStartPoly.setText("End Polygon"); //Change text to End polygon
                     PolygonOptions polygonOptions = new PolygonOptions();
+                    markers = orderToConvex(markers);
                     for (Marker marker : markers) {
                         polygonOptions.add(marker.getPosition());
                     }
@@ -236,5 +234,93 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng centroid = new LatLng(centerX / positions.size(), centerY / positions.size());
         Toast.makeText(this, "Centroid Lat: "+centroid.latitude+" Long: "+centroid.longitude, Toast.LENGTH_LONG).show();
         return centroid;
+    }
+
+    /**
+     * The function orders a list of coordinates such that the distance between each two adjacent
+     * vertices is minimal. This property leads to have a convex polygon generated from the vertices
+     *
+     * The function is called only if markers.size() > 3. Hence there are no risks of NullPointerEXception.
+     *
+     * The complexity of the algorithm is O(n^2), not efficient but simple and effective
+     *
+     * @param markers (unordered list of vertices)
+     * @return markers (list of vertices that is going to generate a convex polygon)
+     */
+    /*private List<Marker> orderToConvex(List<Marker> markers){
+        for (int i = 0; i < markers.size(); i++ ){
+            Marker marker = markers.get(i);
+            int minIndex = i+1; //the initialization is redundant but avoids a warning
+            double minDistance = Double.MAX_VALUE;
+            for (int j = 1; j < markers.size() - i; j++){ //in this for-loop I search the nearest vertex saving its index
+                Marker nextMarker = markers.get(j + i);
+                double distance = Math.sqrt(
+                                Math.pow((marker.getPosition().latitude  - nextMarker.getPosition().latitude ),2) +
+                                Math.pow((marker.getPosition().longitude - nextMarker.getPosition().longitude),2) );
+                if (distance < minDistance){
+                    minDistance = distance;
+                    minIndex = j+i;
+                }
+            }
+            if (minIndex-i > 1){ //the nearest vertex is not yet the following in the list order
+                Marker nearestMarker = markers.remove(minIndex);
+                markers.add(i+1, nearestMarker);
+            }
+        }
+        return markers;
+    }*/
+    //algorithm inspired by https://stackoverflow.com/questions/14263284/create-non-intersecting-polygon-passing-through-all-given-points
+    private List<Marker> orderToConvex(List<Marker> markers){
+        List<Marker> orderedMarkers = new ArrayList<>();
+        // forcing the ordering of markers from the westernmost to the easternmost
+        markers = longitudeSort(markers);
+        boolean easternmostReached = false;
+        Marker firstMarker = markers.remove(0);
+        orderedMarkers.add(0, firstMarker);
+        // putting in orderedMarkers the northernmost markers from west to east
+        while (!easternmostReached){
+            for (int i = 0; i < markers.size() - 1; i++) {
+                Marker currentMarker = markers.get(i);
+                if (currentMarker.getPosition().latitude >= firstMarker.getPosition().latitude) {
+                    orderedMarkers.add(currentMarker);
+                    markers.remove(currentMarker);
+                }
+            }
+            // in the next position is placed the last element of markers (the easternmost)
+            orderedMarkers.add(markers.remove(markers.size()-1));
+            easternmostReached = true;
+        }
+        // putting in orderedMarkers the southernmost markers from east to west
+        for(int k = markers.size()-1; k >= 0; k--){
+            orderedMarkers.add(markers.remove(k));
+        }
+        return orderedMarkers;
+    }
+
+    // insertionSort with longitude as criterium
+    private List<Marker> longitudeSort(List<Marker> markers) {
+        List<Marker> orderedMarkers = new ArrayList<>();
+        for(int i=0; i < markers.size(); i++){
+            Marker m1 = markers.get(i);
+            if(orderedMarkers.size() > 0){
+                int j = 0;
+                boolean isInserted = false;
+                while(j < orderedMarkers.size() && !isInserted){
+                    Marker m2 = orderedMarkers.get(j);
+                    // crescent longitude ordering
+                    if(m1.getPosition().longitude < m2.getPosition().longitude){
+                        orderedMarkers.add(j, m1);
+                        isInserted = true;
+                    }
+                    j++;
+                }
+                if(!isInserted){
+                    orderedMarkers.add(m1);
+                }
+            } else {
+                orderedMarkers.add(m1);
+            }
+        }
+        return orderedMarkers;
     }
 }
